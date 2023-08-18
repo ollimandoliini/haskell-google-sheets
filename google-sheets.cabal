@@ -1,0 +1,81 @@
+cabal-version:   3.4
+name:            google-sheets
+version:         0.1.0.0
+
+-- synopsis:
+-- description:
+license:         MIT
+license-file:    LICENSE
+author:          Olli Kortelahti
+maintainer:      ollikortelahti@gmail.com
+
+-- copyright:
+category:        Web
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+-- extra-source-files:
+
+common warnings
+  ghc-options: -Wall
+
+library
+  import:           warnings
+  exposed-modules:
+    Web.Google.Sheets
+    Web.Google.Sheets.Spreadsheets.Values
+    Web.Google.Sheets.Types
+
+  -- other-modules:
+  -- other-extensions:
+  build-depends:
+    , aeson       >=2.2.0     && <3
+    , base        ^>=4.17.1.0
+    , bytestring  >=0.11.4    && <1
+    , req         >=3.13.1    && <4
+    , text        >=2.0.2     && <3
+    , vector      >=0.13.0    && <1
+
+  hs-source-dirs:   lib
+  default-language: GHC2021
+
+executable google-sheets
+  import:           warnings
+  main-is:          Main.hs
+  other-modules:
+    Credentials
+    Types
+
+  -- other-extensions:
+  build-depends:
+    , aeson
+    , base           ^>=4.17.1.0
+    , bytestring
+    , cryptonite
+    , google-sheets
+    , jose
+    , lens
+    , monad-time
+    , mtl
+    , req
+    , text
+    , time
+    , vector
+    , x509
+    , x509-store
+
+  hs-source-dirs:   app
+  default-language: GHC2021
+
+test-suite google-sheets-test
+  import:           warnings
+  default-language: GHC2021
+
+  -- other-modules:
+  -- other-extensions:
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          Main.hs
+  build-depends:
+    , base           ^>=4.17.1.0
+    , google-sheets
