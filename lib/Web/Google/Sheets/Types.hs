@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Google.Sheets.Types
   ( Cell (..)
   , Dimension (..)
@@ -11,15 +13,16 @@ module Web.Google.Sheets.Types
   )
 where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON), object, withObject, (.:), (.=), withArray)
 import Data.Text (Text)
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
+import Numeric.Natural (Natural)
 
 -- | Zero-based indices of a single cell
 data Cell = Cell
-  { row :: Int
-  , column :: Int
+  { row :: Natural
+  , column :: Natural
   }
   deriving (Show)
 
@@ -56,13 +59,12 @@ data ValueInputOption
   | UserEntered
 
 data Range
-  = RangeDefaultSheet Text
-  -- ^ Range in the default sheet
-  | RangeWithSheet {range :: Text, sheet :: Text}
-  -- ^ Range in the specified sheet
-  | FullSheet Text
-  -- ^ Full sheet
-
+  = -- | Range in the default sheet
+    RangeDefaultSheet Text
+  | -- | Range in the specified sheet
+    RangeWithSheet {range :: Text, sheet :: Text}
+  | -- | Full sheet
+    FullSheet Text
 
 -- | Main type for reading and writing values to a spreadsheet
 newtype ValueRange = ValueRange
@@ -70,6 +72,10 @@ newtype ValueRange = ValueRange
   }
   deriving (Show, Generic)
 
-instance FromJSON ValueRange
+instance FromJSON ValueRange where
+  parseJSON = withObject "ValueRange" $ \o -> ValueRange <$> (o .: "values")
 
-instance ToJSON ValueRange
+instance ToJSON ValueRange where
+  toJSON (ValueRange values) = object ["values" .= values]
+
+

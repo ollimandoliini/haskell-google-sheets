@@ -1,12 +1,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-{- | 
-
--}
-
 module Web.Google.Sheets.Spreadsheets.Values
   ( getValueRange
+  , getValue
   , getCellValue
   , updateValueRange
   , updateCellValue
@@ -19,6 +16,7 @@ import Data.ByteString (StrictByteString)
 import Data.Text (Text, pack)
 import Data.Vector qualified as Vector
 import Network.HTTP.Req (GET (GET), MonadHttp, NoReqBody (..), Option, POST (POST), PUT (PUT), QueryParam (queryParam), ReqBodyJson (..), Scheme (Https), https, ignoreResponse, jsonResponse, oAuth2Bearer, req, responseBody, (/:))
+import Web.Google.Sheets.FromSheet (FromSheet (fromSheet))
 import Web.Google.Sheets.Types
   ( Cell (..)
   , DatetimeRenderOption (..)
@@ -135,6 +133,19 @@ getValueRange
       encodeDatetimeRenderOption SerialNumber = "SERIAL_NUMBER"
       encodeDatetimeRenderOption FormattedString = "FORMATTED_STRING"
 
+getValue
+  :: (MonadHttp m, FromSheet a)
+  => StrictByteString
+  -- ^ OAuth2 Bearer token
+  -> Text
+  -- ^ Spreadsheet ID
+  -> Range
+  -- ^ Range
+  -> ValueRangeParams
+  -> m (Either String a)
+getValue accessToken spreadSheetId range valueRangeParams =
+  fromSheet . values <$> getValueRange accessToken spreadSheetId range valueRangeParams
+
 getCellValue
   :: (MonadHttp m)
   => StrictByteString
@@ -186,24 +197,25 @@ appendValueRange
      in void $ req POST apiUrl (ReqBodyJson valueRange) ignoreResponse options
     where
       queryParams :: Option 'Https
-      queryParams = queryParam "valueInputOption" (Just (encodeValueInputOption valueInputOption))
-
-      encodeValueInputOption :: ValueInputOption -> Text
-      encodeValueInputOption Raw = "RAW"
-      encodeValueInputOption UserEntered = "USER_ENTERED"
-
-enumerateColumns :: [Text]
-enumerateColumns = pack <$> go letters
-  where
-    letters = (: []) <$> ['A' .. 'Z']
-    go xs = xs ++ go [a : b | a <- ['A' .. 'Z'], b <- xs]
+      queryParams =
+        queryParam "valueInputOption"
+          $ Just
+          $ case valueInputOption of
+            Raw -> "RAW" :: Text
+            UserEntered -> "USER_ENTERED"
 
 cellToRange :: Cell -> Text
 cellToRange (Cell row column) =
   enumerateColumns
-    !! column
+    !! fromIntegral column
     <> (pack . show $ (row + 1))
     <> ":"
     <> enumerateColumns
-    !! column
+    !! fromIntegral column
     <> (pack . show $ (row + 1))
+  where
+    enumerateColumns :: [Text]
+    enumerateColumns = pack <$> go letters
+      where
+        letters = (: []) <$> ['A' .. 'Z']
+        go xs = xs ++ go [a : b | a <- ['A' .. 'Z'], b <- xs]

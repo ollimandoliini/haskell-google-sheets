@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-
 module Credentials (createSignedJWT, getAccessToken, getPrivateKey) where
 
 import Control.Lens ((#), (&), (?~))
@@ -48,16 +47,16 @@ getPrivateKey file = do
         [X509.PrivKeyRSA key] -> Just key
         _ -> Nothing
 
-createSignedJWT ::
-  ( MonadIO m,
-    MonadRandom m,
-    MonadError AppError m
-  ) =>
-  Email ->
-  Maybe Email ->
-  [Scope] ->
-  PrivateKey ->
-  m SignedJWT
+createSignedJWT
+  :: ( MonadIO m
+     , MonadRandom m
+     , MonadError AppError m
+     )
+  => Email
+  -> Maybe Email
+  -> [Scope]
+  -> PrivateKey
+  -> m SignedJWT
 createSignedJWT (Email issuer) msub scopes key = do
   t <- liftIO currentTime
   signClaims jwk header (claims t)
@@ -77,7 +76,7 @@ getAccessToken :: (MonadIO m) => SignedJWT -> m AccessToken
 getAccessToken signedJwt = do
   let tokenUrl = https "oauth2.googleapis.com" /: "token"
       tokenPayload =
-        ReqBodyUrlEnc $
-          ("grant_type" =: ("urn:ietf:params:oauth:grant-type:jwt-bearer" :: Text))
-            <> ("assertion" =: decodeUtf8 (encodeCompact signedJwt))
+        ReqBodyUrlEnc
+          $ ("grant_type" =: ("urn:ietf:params:oauth:grant-type:jwt-bearer" :: Text))
+          <> ("assertion" =: decodeUtf8 (encodeCompact signedJwt))
   responseBody <$> runReq defaultHttpConfig (req POST tokenUrl tokenPayload jsonResponse mempty)
