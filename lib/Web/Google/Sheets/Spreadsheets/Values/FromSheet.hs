@@ -4,8 +4,8 @@ module Web.Google.Sheets.Spreadsheets.Values.FromSheet where
 
 import Data.Text (Text, unpack)
 import Data.Vector (Vector, toList)
-import Web.Google.Sheets.Spreadsheets.Values.SheetValue (ReadSheetValue (..))
 import Text.Read (readEither)
+import Web.Google.Sheets.Spreadsheets.Values.SheetValue (ReadSheetValue (..))
 
 class FromSheet a where
   fromSheet :: Vector (Vector ReadSheetValue) -> Either String a
