@@ -81,5 +81,5 @@ test-suite google-sheets-test
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-    , base           ^>=4.17.1.0
+    , base           >=4.9 && <4.19
     , google-sheets
