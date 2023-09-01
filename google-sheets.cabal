@@ -41,7 +41,7 @@ library
     , vector      >=0.13.0 && <1
 
   hs-source-dirs:   lib
-  default-language: Haskell2010
+  default-language: GHC2021
 
 -- executable google-sheets
 --   import:           warnings
@@ -69,11 +69,11 @@ library
 --     , x509-store
 
 --   hs-source-dirs:   app
---   default-language: Haskell2010
+--   default-language: GHC2021
 
 test-suite google-sheets-test
   import:           warnings
-  default-language: Haskell2010
+  default-language: GHC2021
 
   -- other-modules:
   -- other-extensions:
@@ -81,5 +81,5 @@ test-suite google-sheets-test
   hs-source-dirs:   test
   main-is:          Main.hs
   build-depends:
-    , base           >=4.9 && <4.19
+    , base           >=4.9    && <4.19
     , google-sheets
