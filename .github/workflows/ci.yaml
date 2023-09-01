@@ -5,9 +5,15 @@ on:
   push:
 
 jobs:
-  cabal:
+  fourmolu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: haskell-actions/run-fourmolu@v9
+  build:
     name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
     runs-on: ${{ matrix.os }}
+    needs: fourmolu
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -46,6 +52,10 @@ jobs:
     - name: Test
       run: |
         cabal test all
+        
+    - name: Haddock
+      run: |
+        cabal haddock all
 
     - name: Save cache
       uses: actions/cache/save@v3
