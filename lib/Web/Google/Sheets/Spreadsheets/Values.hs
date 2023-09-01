@@ -2,62 +2,65 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Google.Sheets.Spreadsheets.Values
-  ( getValueRange
-  , getValue
-  , getCellValue
-  , updateValueRange
-  , updateCellValue
-  , appendValueRange
+  ( getValues
+  , getValueRange
+  , updateValues
+  , appendValues
   )
 where
 
 import Control.Monad (void)
+import Data.Aeson (KeyValue ((.=)), object)
 import Data.ByteString (StrictByteString)
-import Data.Text (Text, pack)
-import Data.Vector qualified as Vector
-import Network.HTTP.Req (GET (GET), MonadHttp, NoReqBody (..), Option, POST (POST), PUT (PUT), QueryParam (queryParam), ReqBodyJson (..), Scheme (Https), https, ignoreResponse, jsonResponse, oAuth2Bearer, req, responseBody, (/:))
-import Web.Google.Sheets.FromSheet (FromSheet (fromSheet))
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
+import Network.HTTP.Req (GET (GET), MonadHttp, NoReqBody (..), Option, POST (POST), PUT (PUT), QueryParam (queryParam), ReqBodyJson (..), Scheme (Https), header, https, ignoreResponse, jsonResponse, oAuth2Bearer, req, responseBody, (/:))
+import Web.Google.Sheets.Spreadsheets.Values.FromSheet (FromSheet (fromSheet))
+import Web.Google.Sheets.Spreadsheets.Values.ToSheet (ToSheet (toSheet))
 import Web.Google.Sheets.Types
-  ( Cell (..)
-  , DatetimeRenderOption (..)
+  ( DatetimeRenderOption (..)
   , Dimension (..)
+  , GetValueParams (..)
   , Range (..)
+  , ReadValueRange (values)
   , ValueInputOption (..)
-  , ValueRange (values)
-  , ValueRangeParams (..)
   , ValueRenderOption (..)
+  , rangeToText
   )
 
-updateValueRange
-  :: (MonadHttp m)
+updateValues
+  :: (MonadHttp m, ToSheet a)
   => StrictByteString
   -- ^ OAuth2 Bearer token
+  -> Maybe Text
+  -- ^ Quota project
   -> Text
   -- ^ Spreadsheet ID
-  -> Text
+  -> Range
   -- ^ Range
-  -> Maybe Text
-  -- ^ Spreadsheet name
   -> ValueInputOption
-  -> ValueRange
+  -> a
   -> m ()
-updateValueRange
+updateValues
   accessToken
+  quotaProject
   spreadsheetId
   range
-  mSheetName
   valueInputOption
-  valueRange =
-    let range' = maybe range (<> "!" <> range) mSheetName
-        apiUrl =
+  values =
+    let apiUrl =
           https "sheets.googleapis.com"
             /: "v4"
             /: "spreadsheets"
             /: spreadsheetId
             /: "values"
-            /: range'
-        options = oAuth2Bearer accessToken <> queryParams
-     in void $ req PUT apiUrl (ReqBodyJson valueRange) ignoreResponse options
+            /: rangeToText range
+        options =
+          oAuth2Bearer accessToken
+            <> queryParams
+            <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
+        reqBody = ReqBodyJson (object ["values" .= toSheet values])
+     in void $ req PUT apiUrl reqBody ignoreResponse options
     where
       queryParams :: Option 'Https
       queryParams = queryParam "valueInputOption" (Just (encodeValueInputOption valueInputOption))
@@ -66,58 +69,62 @@ updateValueRange
       encodeValueInputOption Raw = "RAW"
       encodeValueInputOption UserEntered = "USER_ENTERED"
 
-updateCellValue
-  :: (MonadHttp m)
+getValues
+  :: (MonadHttp m, FromSheet a)
   => StrictByteString
   -- ^ OAuth2 Bearer token
+  -> Maybe Text
+  -- ^ Quota project
   -> Text
   -- ^ Spreadsheet ID
-  -> Cell
-  -- ^ Cell
-  -> Maybe Text
-  -- ^ Sheet name
-  -> ValueInputOption
-  -> ValueRange
-  -> m ()
-updateCellValue accessToken spreadSheetId cell sheetName params =
-  updateValueRange accessToken spreadSheetId (cellToRange cell) sheetName params
+  -> Range
+  -- ^ Range
+  -> GetValueParams
+  -> m (Either String a)
+getValues
+  accessToken
+  quotaProject
+  spreadsheetId
+  range
+  params = fromSheet . values <$> getValueRange accessToken quotaProject spreadsheetId range params
 
 getValueRange
   :: (MonadHttp m)
   => StrictByteString
   -- ^ OAuth2 Bearer token
+  -> Maybe Text
+  -- ^ Quota project
   -> Text
   -- ^ Spreadsheet ID
   -> Range
-  -> ValueRangeParams
-  -- ^ Value
-  -> m ValueRange
+  -- ^ Range
+  -> GetValueParams
+  -> m ReadValueRange
 getValueRange
   accessToken
+  quotaProject
   spreadsheetId
   range
   params =
-    let range' =
-          case range of
-            RangeDefaultSheet r -> r
-            RangeWithSheet s r -> s <> "!" <> r
-            FullSheet s -> s
-        apiUrl =
+    let apiUrl =
           https "sheets.googleapis.com"
             /: "v4"
             /: "spreadsheets"
             /: spreadsheetId
             /: "values"
-            /: range'
-        options = oAuth2Bearer accessToken <> paramsToOption params
+            /: rangeToText range
+        options =
+          oAuth2Bearer accessToken
+            <> paramsToOption params
+            <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
      in responseBody <$> req GET apiUrl NoReqBody jsonResponse options
     where
-      paramsToOption :: ValueRangeParams -> Option 'Https
-      paramsToOption (ValueRangeParams majorDimension valueRenderOption datetimeRenderOption) =
+      paramsToOption :: GetValueParams -> Option 'Https
+      paramsToOption (GetValueParams majorDimension valueRenderOption datetimeRenderOption) =
         mconcat
-          [ maybe mempty (queryParam "majorDimension" . Just . encodeMajorDimension) majorDimension
-          , maybe mempty (queryParam "valueRenderOption" . Just . encodeValueRenderOption) valueRenderOption
-          , maybe mempty (queryParam "dateTimeRenderOption" . Just . encodeDatetimeRenderOption) datetimeRenderOption
+          [ (queryParam "majorDimension" . Just . encodeMajorDimension) majorDimension
+          , (queryParam "valueRenderOption" . Just . encodeValueRenderOption) valueRenderOption
+          , (queryParam "dateTimeRenderOption" . Just . encodeDatetimeRenderOption) datetimeRenderOption
           ]
 
       encodeMajorDimension :: Dimension -> Text
@@ -133,68 +140,33 @@ getValueRange
       encodeDatetimeRenderOption SerialNumber = "SERIAL_NUMBER"
       encodeDatetimeRenderOption FormattedString = "FORMATTED_STRING"
 
-getValue
-  :: (MonadHttp m, FromSheet a)
+appendValues
+  :: (MonadHttp m, ToSheet a)
   => StrictByteString
   -- ^ OAuth2 Bearer token
   -> Text
   -- ^ Spreadsheet ID
   -> Range
   -- ^ Range
-  -> ValueRangeParams
-  -> m (Either String a)
-getValue accessToken spreadSheetId range valueRangeParams =
-  fromSheet . values <$> getValueRange accessToken spreadSheetId range valueRangeParams
-
-getCellValue
-  :: (MonadHttp m)
-  => StrictByteString
-  -- ^ OAuth2 Bearer token
-  -> Text
-  -- ^ Spreadsheet ID
-  -> Cell
-  -- ^ Cell
-  -> Maybe Text
-  -- ^ Sheet name
-  -> ValueRangeParams -- TODO: Consider this naming
-  -> m Text
-getCellValue accessToken spreadSheetId cell mSheetName params =
-  let range = case mSheetName of
-        Just sheetName -> RangeWithSheet (cellToRange cell) sheetName
-        Nothing -> RangeDefaultSheet (cellToRange cell)
-   in Vector.head . Vector.head . values <$> getValueRange accessToken spreadSheetId range params
-
-appendValueRange
-  :: (MonadHttp m)
-  => StrictByteString
-  -- ^ OAuth2 Bearer token
-  -> Text
-  -- ^ Spreadsheet ID
-  -> Text
-  -- ^ Range
-  -> Maybe Text
-  -- ^ Sheet name
   -> ValueInputOption
-  -> ValueRange
+  -> a
   -> m ()
-appendValueRange
+appendValues
   accessToken
   spreadsheetId
   range
-  mSheetName
   valueInputOption
   valueRange =
-    let range' = maybe range (<> "!" <> range) mSheetName
-        apiUrl =
+    let apiUrl =
           https "sheets.googleapis.com"
             /: "v4"
             /: "spreadsheets"
             /: spreadsheetId
             /: "values"
-            /: range'
+            /: rangeToText range
             /: ":append"
         options = oAuth2Bearer accessToken <> queryParams
-     in void $ req POST apiUrl (ReqBodyJson valueRange) ignoreResponse options
+     in void $ req POST apiUrl (ReqBodyJson (toSheet valueRange)) ignoreResponse options
     where
       queryParams :: Option 'Https
       queryParams =
@@ -203,19 +175,3 @@ appendValueRange
           $ case valueInputOption of
             Raw -> "RAW" :: Text
             UserEntered -> "USER_ENTERED"
-
-cellToRange :: Cell -> Text
-cellToRange (Cell row column) =
-  enumerateColumns
-    !! fromIntegral column
-    <> (pack . show $ (row + 1))
-    <> ":"
-    <> enumerateColumns
-    !! fromIntegral column
-    <> (pack . show $ (row + 1))
-  where
-    enumerateColumns :: [Text]
-    enumerateColumns = pack <$> go letters
-      where
-        letters = (: []) <$> ['A' .. 'Z']
-        go xs = xs ++ go [a : b | a <- ['A' .. 'Z'], b <- xs]

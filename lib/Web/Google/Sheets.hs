@@ -1,6 +1,7 @@
 module Web.Google.Sheets
   ( -- * Values
-    module Web.Google.Sheets.Spreadsheets.Values
+      module Web.Google.Sheets.Spreadsheets.Values
+
     -- * Types
   , module Web.Google.Sheets.Types
   )

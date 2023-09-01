@@ -1,40 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Google.Sheets.Types
-  ( Cell (..)
-  , Dimension (..)
-  , ValueRangeParams (..)
-  , defaultValueRangeParams
-  , ValueRange (..)
+  ( Dimension (..)
+  , GetValueParams (..)
+  , defaultGetValueParams
   , ValueRenderOption (..)
   , ValueInputOption (..)
   , Range (..)
+  , SheetRange (..)
   , DatetimeRenderOption (..)
+  , rangeToText
+  , ReadValueRange (..)
   )
 where
 
-import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON), object, withObject, (.:), (.=), withArray)
-import Data.Text (Text)
-import Data.Vector (Vector)
-import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, parseJSON, withObject, (.!=), (.:?))
+import Data.Text (Text, pack)
+import Data.Vector (Vector, empty, singleton)
 import Numeric.Natural (Natural)
-
--- | Zero-based indices of a single cell
-data Cell = Cell
-  { row :: Natural
-  , column :: Natural
-  }
-  deriving (Show)
+import Web.Google.Sheets.Spreadsheets.Values.SheetValue (ReadSheetValue)
 
 -- | https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get#query-parameters
-data ValueRangeParams = ValueRangeParams
-  { majorDimension :: Maybe Dimension
-  , valueRenderOption :: Maybe ValueRenderOption
-  , datetimeRenderOption :: Maybe DatetimeRenderOption
+data GetValueParams = GetValueParams
+  { majorDimension :: Dimension
+  , valueRenderOption :: ValueRenderOption
+  , datetimeRenderOption :: DatetimeRenderOption
   }
 
-defaultValueRangeParams :: ValueRangeParams
-defaultValueRangeParams = ValueRangeParams Nothing Nothing Nothing
+defaultGetValueParams :: GetValueParams
+defaultGetValueParams = GetValueParams Row FormattedValue SerialNumber
 
 -- | https://developers.google.com/sheets/api/reference/rest/v4/Dimension
 data Dimension
@@ -59,23 +53,52 @@ data ValueInputOption
   | UserEntered
 
 data Range
-  = -- | Range in the default sheet
-    RangeDefaultSheet Text
-  | -- | Range in the specified sheet
-    RangeWithSheet {range :: Text, sheet :: Text}
-  | -- | Full sheet
-    FullSheet Text
+  = RangeWithSheetName (Maybe SheetRange) Text
+  | RangeWithDefaultSheet SheetRange
+  deriving (Show)
 
--- | Main type for reading and writing values to a spreadsheet
-newtype ValueRange = ValueRange
-  { values :: Vector (Vector Text)
-  }
-  deriving (Show, Generic)
+data SheetRange
+  = FullRange Natural Natural Natural Natural
+  | RowRange Natural Natural
+  | ColumnRange Natural Natural
+  | PartialColumnRange Natural (Maybe Natural) Natural (Maybe Natural)
+  deriving (Show)
 
-instance FromJSON ValueRange where
-  parseJSON = withObject "ValueRange" $ \o -> ValueRange <$> (o .: "values")
+coordinatesToRange :: Natural -> Natural -> Text
+coordinatesToRange column row =
+  enumerateColumns
+    !! fromIntegral column
+    <> (pack . show $ (row + 1))
 
-instance ToJSON ValueRange where
-  toJSON (ValueRange values) = object ["values" .= values]
+columnToText :: Natural -> Text
+columnToText column = enumerateColumns !! fromIntegral column
 
+rowToText :: Natural -> Text
+rowToText = pack . show . (+ 1)
 
+-- | *NOTE* Produces an infinite list
+enumerateColumns :: [Text]
+enumerateColumns = pack <$> go letters
+  where
+    letters = (: []) <$> ['A' .. 'Z']
+    go xs = xs ++ go [a : b | a <- ['A' .. 'Z'], b <- xs]
+
+rangeToText :: Range -> Text
+rangeToText (RangeWithDefaultSheet sheetRange) = sheetRangeToText sheetRange
+rangeToText (RangeWithSheetName (Just sheetRange) sheetName) = "'" <> sheetName <> "'!" <> sheetRangeToText sheetRange
+rangeToText (RangeWithSheetName Nothing sheetName) = sheetName
+
+sheetRangeToText :: SheetRange -> Text
+sheetRangeToText (FullRange startColumn startRow endColumn endRow) =
+  coordinatesToRange startColumn startRow <> ":" <> coordinatesToRange endColumn endRow
+sheetRangeToText (RowRange startRow endRow) = rowToText startRow <> ":" <> rowToText endRow
+sheetRangeToText (ColumnRange startColumn endColumn) = columnToText startColumn <> ":" <> columnToText endColumn
+sheetRangeToText (PartialColumnRange startColumn mStartRow endColumn mEndRow) =
+  columnToText startColumn <> maybe "" rowToText mStartRow <> ":" <> columnToText endColumn <> maybe "" rowToText mEndRow
+
+newtype ReadValueRange = ReadValueRange {values :: Vector (Vector ReadSheetValue)}
+
+instance FromJSON ReadValueRange where
+  parseJSON =
+    withObject "ReadValueRange"
+      $ \o -> ReadValueRange <$> o .:? "values" .!= singleton empty
