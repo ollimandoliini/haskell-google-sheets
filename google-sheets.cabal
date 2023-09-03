@@ -69,9 +69,6 @@ library
 test-suite google-sheets-test
   import:           warnings
   default-language: GHC2021
-
-  -- other-modules:
-  -- other-extensions:
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
   main-is:          Main.hs

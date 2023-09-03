@@ -57,7 +57,8 @@ jobs:
 
       - name: Haddock
         run: |
-          cabal haddock all
+          cabal haddock
+        if: ${{ matrix.ghc != '9.2.8' }}
 
       - name: Save cache
         uses: actions/cache/save@v3
