@@ -100,5 +100,5 @@ newtype ReadValueRange = ReadValueRange {values :: Vector (Vector ReadSheetValue
 
 instance FromJSON ReadValueRange where
   parseJSON =
-    withObject "ReadValueRange"
-      $ \o -> ReadValueRange <$> o .:? "values" .!= singleton empty
+    withObject "ReadValueRange" $
+      \o -> ReadValueRange <$> o .:? "values" .!= singleton empty

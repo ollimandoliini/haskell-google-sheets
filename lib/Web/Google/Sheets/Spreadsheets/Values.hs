@@ -170,8 +170,8 @@ appendValues
     where
       queryParams :: Option 'Https
       queryParams =
-        queryParam "valueInputOption"
-          $ Just
-          $ case valueInputOption of
-            Raw -> "RAW" :: Text
-            UserEntered -> "USER_ENTERED"
+        queryParam "valueInputOption" $
+          Just $
+            case valueInputOption of
+              Raw -> "RAW" :: Text
+              UserEntered -> "USER_ENTERED"
