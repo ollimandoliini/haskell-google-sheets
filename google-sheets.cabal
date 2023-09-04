@@ -10,6 +10,7 @@ copyright:       Olli Kortelahti
 category:        Web
 build-type:      Simple
 extra-doc-files: CHANGELOG.md
+tested-with:     GHC ==9.2.8 || ==9.4.5 || ==9.6.2
 
 common warnings
   ghc-options: -Wall
@@ -24,8 +25,6 @@ library
     Web.Google.Sheets.Spreadsheets.Values.ToSheet
     Web.Google.Sheets.Types
 
-  -- other-modules:
-  -- other-extensions:
   build-depends:
     , aeson       >=2.2.0  && <2.3
     , base        >=4.16.0 && <4.19

@@ -23,6 +23,17 @@ jobs:
         ghc: ["9.2.8", "9.4.5", "9.6.2"]
 
     steps:
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Use gcloud CLI'
+        run: 'gcloud auth print-access-token'
+
       - uses: actions/checkout@v2
 
       - uses: haskell/actions/setup@v2
@@ -53,6 +64,7 @@ jobs:
 
       - name: Test
         run: |
+          AUTH_TOKEN=$(gcloud auth print-access-token)
           cabal test all
 
       - name: Haddock

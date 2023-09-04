@@ -1,4 +1,9 @@
 module Main (main) where
 
+import System.Environment (getEnv)
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented."
+main = do
+  env <- getEnv "AUTH_TOKEN"
+  print env
+  error "sorry"
