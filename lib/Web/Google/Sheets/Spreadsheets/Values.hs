@@ -171,7 +171,6 @@ appendValues
       queryParams :: Option 'Https
       queryParams =
         queryParam "valueInputOption" $
-          Just $
-            case valueInputOption of
-              Raw -> "RAW" :: Text
-              UserEntered -> "USER_ENTERED"
+          Just $ case valueInputOption of
+            Raw -> "RAW" :: Text
+            UserEntered -> "USER_ENTERED"
