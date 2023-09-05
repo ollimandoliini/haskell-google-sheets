@@ -23,6 +23,7 @@ jobs:
         ghc: ["9.2.8", "9.4.5", "9.6.2"]
 
     steps:
+      - uses: actions/checkout@v2
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
@@ -32,7 +33,6 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
 
-      - uses: actions/checkout@v2
 
       - uses: haskell/actions/setup@v2
         id: setup-haskell-cabal
