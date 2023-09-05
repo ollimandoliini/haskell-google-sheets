@@ -37,34 +37,6 @@ library
   hs-source-dirs:   lib
   default-language: GHC2021
 
--- executable google-sheets
---   import:           warnings
---   main-is:          Main.hs
---   other-modules:
---     Credentials
---     Types
-
---   -- other-extensions:
---   build-depends:
---     , aeson
---     , base           ^>=4.17.1.0
---     , bytestring
---     , cryptonite
---     , google-sheets
---     , jose
---     , lens
---     , monad-time
---     , mtl
---     , req
---     , text
---     , time
---     , vector
---     , x509
---     , x509-store
-
---   hs-source-dirs:   app
---   default-language: GHC2021
-
 test-suite google-sheets-test
   import:           warnings
   default-language: GHC2021
@@ -74,3 +46,6 @@ test-suite google-sheets-test
   build-depends:
     , base
     , google-sheets
+    , hspec
+    , text
+    , bytestring

@@ -31,9 +31,6 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
 
-      - name: 'Use gcloud CLI'
-        run: 'gcloud auth print-access-token'
-
       - uses: actions/checkout@v2
 
       - uses: haskell/actions/setup@v2
