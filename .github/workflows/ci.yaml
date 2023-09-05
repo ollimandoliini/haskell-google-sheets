@@ -30,10 +30,6 @@ jobs:
           credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
           token_format: 'access_token'
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v1'
-
-
       - uses: haskell/actions/setup@v2
         id: setup-haskell-cabal
         name: Setup Haskell
@@ -62,7 +58,7 @@ jobs:
 
       - name: Test
         run: |
-          AUTH_TOKEN=${{ steps.auth.outputs.access_token }}
+          export AUTH_TOKEN=${{ steps.auth.outputs.access_token }}
           cabal test all
 
       - name: Haddock
