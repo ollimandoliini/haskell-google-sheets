@@ -29,6 +29,7 @@ jobs:
         with:
           credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
           token_format: 'access_token'
+          access_token_scopes: 'https://www.googleapis.com/auth/spreadsheets'
 
       - uses: haskell/actions/setup@v2
         id: setup-haskell-cabal
