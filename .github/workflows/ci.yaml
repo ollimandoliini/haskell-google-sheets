@@ -27,6 +27,7 @@ jobs:
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.SERVICE_ACCOUNT }}'
+          token_format: 'access_token'
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
@@ -61,7 +62,7 @@ jobs:
 
       - name: Test
         run: |
-          AUTH_TOKEN=$(gcloud auth print-access-token)
+          AUTH_TOKEN=${{ steps.auth.outputs.access_token }}
           cabal test all
 
       - name: Haddock
