@@ -20,7 +20,7 @@ main = do
         runReq
           defaultHttpConfig
           (appendValues token "1PHUwechIwIa2lyw522dUbsvdVgh-6-eJSz_jVXuAKgw" range Raw [["Moro" :: Text, "Moro"]])
-            `shouldReturn` ()
+          `shouldReturn` ()
 
 -- main :: IO ()
 -- main = do
