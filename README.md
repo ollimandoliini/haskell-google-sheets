@@ -9,3 +9,4 @@ A Haskell library for for interacting with Google Sheets API.
 - [ ] Write README and CHANGELOG
 - [ ] Finish documentation
 - [ ] Finish tests
+- [ ] InsertDataOption

@@ -14,7 +14,25 @@ import Data.Aeson (KeyValue ((.=)), object)
 import Data.ByteString (StrictByteString)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
-import Network.HTTP.Req (GET (GET), MonadHttp, NoReqBody (..), Option, POST (POST), PUT (PUT), QueryParam (queryParam), ReqBodyJson (..), Scheme (Https), header, https, ignoreResponse, jsonResponse, oAuth2Bearer, req, responseBody, (/:))
+import Network.HTTP.Req
+  ( GET (GET)
+  , MonadHttp
+  , NoReqBody (..)
+  , Option
+  , POST (POST)
+  , PUT (PUT)
+  , QueryParam (queryParam)
+  , ReqBodyJson (..)
+  , Scheme (Https)
+  , header
+  , https
+  , ignoreResponse
+  , jsonResponse
+  , oAuth2Bearer
+  , req
+  , responseBody
+  , (/:)
+  )
 import Web.Google.Sheets.Spreadsheets.Values.FromSheet (FromSheet (fromSheet))
 import Web.Google.Sheets.Spreadsheets.Values.ToSheet (ToSheet (toSheet))
 import Web.Google.Sheets.Types
@@ -151,6 +169,7 @@ appendValues
   -> Range
   -- ^ Range
   -> ValueInputOption
+  -- TODO: InsertDataOption
   -> a
   -> m ()
 appendValues
@@ -159,7 +178,7 @@ appendValues
   spreadsheetId
   range
   valueInputOption
-  valueRange =
+  values =
     let apiUrl =
           https "sheets.googleapis.com"
             /: "v4"
@@ -167,16 +186,17 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-            /: ":append"
+            <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams
             <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
-     in void $ req POST apiUrl (ReqBodyJson (toSheet valueRange)) ignoreResponse options
+        reqBody = ReqBodyJson (object ["values" .= toSheet values])
+     in void $ req POST apiUrl reqBody ignoreResponse options
     where
       queryParams :: Option 'Https
-      queryParams =
-        queryParam "valueInputOption" $
-          Just $ case valueInputOption of
-            Raw -> "RAW" :: Text
-            UserEntered -> "USER_ENTERED"
+      queryParams = queryParam "valueInputOption" (Just (encodeValueInputOption valueInputOption))
+
+      encodeValueInputOption :: ValueInputOption -> Text
+      encodeValueInputOption Raw = "RAW"
+      encodeValueInputOption UserEntered = "USER_ENTERED"
