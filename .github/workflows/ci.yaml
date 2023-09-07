@@ -58,8 +58,11 @@ jobs:
           cabal build all
 
       - name: Test
+        env:
+          AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
+          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID }}
+          SHEET_NAME: ghc-${{ matrix.ghc }}
         run: |
-          export AUTH_TOKEN=${{ steps.auth.outputs.access_token }}
           cabal test all
 
       - name: Haddock
