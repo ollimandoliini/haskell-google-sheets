@@ -186,7 +186,7 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-            <> ":append"
+              <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams
