@@ -144,6 +144,8 @@ appendValues
   :: (MonadHttp m, ToSheet a)
   => StrictByteString
   -- ^ OAuth2 Bearer token
+  -> Maybe Text
+  -- ^ Quota project
   -> Text
   -- ^ Spreadsheet ID
   -> Range
@@ -153,6 +155,7 @@ appendValues
   -> m ()
 appendValues
   accessToken
+  quotaProject
   spreadsheetId
   range
   valueInputOption
@@ -165,7 +168,10 @@ appendValues
             /: "values"
             /: rangeToText range
             /: ":append"
-        options = oAuth2Bearer accessToken <> queryParams
+        options =
+          oAuth2Bearer accessToken
+            <> queryParams
+            <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
      in void $ req POST apiUrl (ReqBodyJson (toSheet valueRange)) ignoreResponse options
     where
       queryParams :: Option 'Https

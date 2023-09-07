@@ -5,4 +5,7 @@ A Haskell library for for interacting with Google Sheets API.
 ## Todo
 
 - [x] Fix parser for `values`
-- [ ] Switch to using Natural
+- [x] Switch to using Natural
+- [ ] Write README and CHANGELOG
+- [ ] Finish documentation
+- [ ] Finish tests

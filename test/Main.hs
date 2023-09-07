@@ -2,8 +2,7 @@
 
 module Main (main) where
 
-import Data.ByteString (StrictByteString)
-import Data.Text (Text, pack)
+import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
 import System.Environment
 import Test.Hspec
@@ -20,7 +19,7 @@ main = do
       it "appends a value to the sheet" $ do
         let range = RangeWithSheetName (Just (FullRange 0 0 2 0)) sheetName
             request =
-              updateValues
+              appendValues
                 token
                 Nothing
                 spreadSheetId
