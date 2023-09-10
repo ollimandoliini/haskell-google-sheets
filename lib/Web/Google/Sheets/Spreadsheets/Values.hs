@@ -12,7 +12,8 @@ module Web.Google.Sheets.Spreadsheets.Values
   , Range (..)
   , ReadValueRange (values)
   , ValueInputOption (..)
-  , ValueRenderOption (..), SheetRange (..)
+  , ValueRenderOption (..)
+  , SheetRange (..)
   )
 where
 
@@ -40,6 +41,7 @@ import Network.HTTP.Req
   , responseBody
   , (/:)
   )
+import Numeric.Natural (Natural)
 import Web.Google.Sheets.Spreadsheets.Values.FromSheet (FromSheet (fromSheet))
 import Web.Google.Sheets.Spreadsheets.Values.ToSheet (ToSheet (toSheet))
 import Web.Google.Sheets.Spreadsheets.Values.Types
@@ -48,10 +50,10 @@ import Web.Google.Sheets.Spreadsheets.Values.Types
   , GetValueParams (..)
   , Range (..)
   , ReadValueRange (values)
+  , SheetRange (..)
   , ValueInputOption (..)
-  , ValueRenderOption (..), SheetRange (..)
+  , ValueRenderOption (..)
   )
-import Numeric.Natural (Natural)
 
 -- | Update values on a range.
 updateValues
@@ -197,7 +199,7 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-            <> ":append"
+              <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams

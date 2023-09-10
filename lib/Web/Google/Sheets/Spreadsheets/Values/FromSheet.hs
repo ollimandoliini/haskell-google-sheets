@@ -7,8 +7,7 @@ import Data.Coerce (coerce)
 import Data.Text (Text, unpack)
 import Data.Vector (Vector, toList)
 import Text.Read (readEither)
-import Web.Google.Sheets.Spreadsheets.Values.Types (ReadSheetValue(..))
-
+import Web.Google.Sheets.Spreadsheets.Values.Types (ReadSheetValue (..))
 
 -- | `FromSheet` is the highest level of the decoding type class hiearchy. It is used to convert a two-dimensional
 -- (a vector of vectors) value into some value `a`.
