@@ -1,18 +1,7 @@
 -- | A library for interacting with the Google Sheets API.
 module Web.Google.Sheets
   ( -- * Values
-    getValues
-  , getValueRange
-  , updateValues
-  , appendValues
-  , SheetRange (..)
-  , Range (..)
-  , GetValueParams (..)
-  , defaultGetValueParams
-  , Dimension
-  , ValueInputOption (..)
-  , DatetimeRenderOption (..)
-  , ReadValueRange
+      module Web.Google.Sheets.Spreadsheets.Values
 
     -- * Re-exports
   , MonadHttp (..)
@@ -23,18 +12,19 @@ where
 
 import Network.HTTP.Req (MonadHttp (..), defaultHttpConfig, runReq)
 import Web.Google.Sheets.Spreadsheets.Values
-  ( appendValues
-  , getValueRange
-  , getValues
-  , updateValues
-  )
-import Web.Google.Sheets.Spreadsheets.Values.Types
   ( DatetimeRenderOption (..)
   , Dimension
   , GetValueParams (..)
   , Range (..)
-  , ReadValueRange
+  , ReadSheetValue (ReadSheetValue)
+  , ReadValueRange (..)
   , SheetRange (..)
   , ValueInputOption (..)
+  , WriteSheetValue (..)
+  , appendValues
   , defaultGetValueParams
+  , getValueRange
+  , getValues
+  , updateValues
+  , clearValues
   )

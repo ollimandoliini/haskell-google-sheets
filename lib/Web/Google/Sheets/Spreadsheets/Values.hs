@@ -6,14 +6,8 @@ module Web.Google.Sheets.Spreadsheets.Values
   , getValueRange
   , updateValues
   , appendValues
-  , DatetimeRenderOption (..)
-  , Dimension (..)
-  , GetValueParams (..)
-  , Range (..)
-  , ReadValueRange (values)
-  , ValueInputOption (..)
-  , ValueRenderOption (..)
-  , SheetRange (..)
+  , clearValues
+  , module Web.Google.Sheets.Spreadsheets.Values.Types
   )
 where
 
@@ -49,10 +43,13 @@ import Web.Google.Sheets.Spreadsheets.Values.Types
   , Dimension (..)
   , GetValueParams (..)
   , Range (..)
-  , ReadValueRange (values)
+  , ReadValueRange (..)
   , SheetRange (..)
   , ValueInputOption (..)
   , ValueRenderOption (..)
+  , defaultGetValueParams
+  , WriteSheetValue (..)
+  , ReadSheetValue (ReadSheetValue)
   )
 
 -- | Update values on a range.
@@ -213,6 +210,36 @@ appendValues
       encodeValueInputOption :: ValueInputOption -> Text
       encodeValueInputOption Raw = "RAW"
       encodeValueInputOption UserEntered = "USER_ENTERED"
+
+-- | Clear values from a range.
+clearValues
+  :: (MonadHttp m)
+  => StrictByteString
+  -- ^ OAuth2 Bearer token
+  -> Maybe Text
+  -- ^ Quota project
+  -> Text
+  -- ^ Spreadsheet ID
+  -> Range
+  -- ^ Range
+  -> m ()
+clearValues
+  accessToken
+  quotaProject
+  spreadsheetId
+  range =
+    let apiUrl =
+          https "sheets.googleapis.com"
+            /: "v4"
+            /: "spreadsheets"
+            /: spreadsheetId
+            /: "values"
+            /: rangeToText range
+              <> ":clear"
+        options =
+          oAuth2Bearer accessToken
+            <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
+     in void $ req POST apiUrl NoReqBody ignoreResponse options
 
 coordinatesToRange :: Natural -> Natural -> Text
 coordinatesToRange column row =

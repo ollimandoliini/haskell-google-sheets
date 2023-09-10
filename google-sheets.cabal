@@ -43,3 +43,4 @@ test-suite google-sheets-test
     , google-sheets
     , hspec
     , text
+    , vector

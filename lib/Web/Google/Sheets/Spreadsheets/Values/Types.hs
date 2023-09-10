@@ -79,14 +79,17 @@ data SheetRange
 -- | A value that's read from a sheet. The Sheets API always returns a string.
 newtype ReadSheetValue
   = ReadSheetValue Text
-  deriving (Show)
+  deriving (Show, Eq)
 
 instance FromJSON ReadSheetValue where
   parseJSON (String s) = pure $ ReadSheetValue s
   parseJSON val = fail $ "Could not parse ReadSheetValue from: " <> show val
 
 -- | Raw values returned by the Sheets API.
-newtype ReadValueRange = ReadValueRange {values :: Vector (Vector ReadSheetValue)}
+newtype ReadValueRange = ReadValueRange
+  { values :: Vector (Vector ReadSheetValue)
+  }
+  deriving (Show, Eq)
 
 instance FromJSON ReadValueRange where
   parseJSON =
