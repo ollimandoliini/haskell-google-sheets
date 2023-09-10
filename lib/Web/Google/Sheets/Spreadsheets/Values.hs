@@ -6,13 +6,20 @@ module Web.Google.Sheets.Spreadsheets.Values
   , getValueRange
   , updateValues
   , appendValues
+  , DatetimeRenderOption (..)
+  , Dimension (..)
+  , GetValueParams (..)
+  , Range (..)
+  , ReadValueRange (values)
+  , ValueInputOption (..)
+  , ValueRenderOption (..), SheetRange (..)
   )
 where
 
 import Control.Monad (void)
 import Data.Aeson (KeyValue ((.=)), object)
 import Data.ByteString (StrictByteString)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Text.Encoding (encodeUtf8)
 import Network.HTTP.Req
   ( GET (GET)
@@ -35,17 +42,18 @@ import Network.HTTP.Req
   )
 import Web.Google.Sheets.Spreadsheets.Values.FromSheet (FromSheet (fromSheet))
 import Web.Google.Sheets.Spreadsheets.Values.ToSheet (ToSheet (toSheet))
-import Web.Google.Sheets.Types
+import Web.Google.Sheets.Spreadsheets.Values.Types
   ( DatetimeRenderOption (..)
   , Dimension (..)
   , GetValueParams (..)
   , Range (..)
   , ReadValueRange (values)
   , ValueInputOption (..)
-  , ValueRenderOption (..)
-  , rangeToText
+  , ValueRenderOption (..), SheetRange (..)
   )
+import Numeric.Natural (Natural)
 
+-- | Update values on a range.
 updateValues
   :: (MonadHttp m, ToSheet a)
   => StrictByteString
@@ -87,6 +95,7 @@ updateValues
       encodeValueInputOption Raw = "RAW"
       encodeValueInputOption UserEntered = "USER_ENTERED"
 
+-- | Query and decode values from a sheet.
 getValues
   :: (MonadHttp m, FromSheet a)
   => StrictByteString
@@ -106,6 +115,7 @@ getValues
   range
   params = fromSheet . values <$> getValueRange accessToken quotaProject spreadsheetId range params
 
+-- | A version of `Web.Google.Sheets.Spreadsheets.Values.getValues` that doesn't do decoding.
 getValueRange
   :: (MonadHttp m)
   => StrictByteString
@@ -158,6 +168,7 @@ getValueRange
       encodeDatetimeRenderOption SerialNumber = "SERIAL_NUMBER"
       encodeDatetimeRenderOption FormattedString = "FORMATTED_STRING"
 
+-- | Append values to a range.
 appendValues
   :: (MonadHttp m, ToSheet a)
   => StrictByteString
@@ -186,7 +197,7 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-              <> ":append"
+            <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams
@@ -200,3 +211,35 @@ appendValues
       encodeValueInputOption :: ValueInputOption -> Text
       encodeValueInputOption Raw = "RAW"
       encodeValueInputOption UserEntered = "USER_ENTERED"
+
+coordinatesToRange :: Natural -> Natural -> Text
+coordinatesToRange column row =
+  enumerateColumns
+    !! fromIntegral column
+    <> (pack . show $ (row + 1))
+
+columnToText :: Natural -> Text
+columnToText column = enumerateColumns !! fromIntegral column
+
+rowToText :: Natural -> Text
+rowToText = pack . show . (+ 1)
+
+-- | *NOTE* Produces an infinite list
+enumerateColumns :: [Text]
+enumerateColumns = pack <$> go letters
+  where
+    letters = (: []) <$> ['A' .. 'Z']
+    go xs = xs ++ go [a : b | a <- ['A' .. 'Z'], b <- xs]
+
+rangeToText :: Range -> Text
+rangeToText (RangeWithDefaultSheet sheetRange) = sheetRangeToText sheetRange
+rangeToText (RangeWithSheetName (Just sheetRange) sheetName) = "'" <> sheetName <> "'!" <> sheetRangeToText sheetRange
+rangeToText (RangeWithSheetName Nothing sheetName) = sheetName
+
+sheetRangeToText :: SheetRange -> Text
+sheetRangeToText (FullRange startColumn startRow endColumn endRow) =
+  coordinatesToRange startColumn startRow <> ":" <> coordinatesToRange endColumn endRow
+sheetRangeToText (RowRange startRow endRow) = rowToText startRow <> ":" <> rowToText endRow
+sheetRangeToText (ColumnRange startColumn endColumn) = columnToText startColumn <> ":" <> columnToText endColumn
+sheetRangeToText (PartialColumnRange startColumn mStartRow endColumn mEndRow) =
+  columnToText startColumn <> maybe "" rowToText mStartRow <> ":" <> columnToText endColumn <> maybe "" rowToText mEndRow

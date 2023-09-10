@@ -17,19 +17,17 @@ library
     Web.Google.Sheets
     Web.Google.Sheets.Spreadsheets.Values
     Web.Google.Sheets.Spreadsheets.Values.FromSheet
-    Web.Google.Sheets.Spreadsheets.Values.SheetValue
     Web.Google.Sheets.Spreadsheets.Values.ToSheet
-    Web.Google.Sheets.Types
+    Web.Google.Sheets.Spreadsheets.Values.Types
 
   hs-source-dirs:   lib
   default-language: GHC2021
-  ghc-options:      -Wall -Werror
+  ghc-options:      -O2 -Wall -Werror
   build-depends:
     , aeson       >=2.2.0  && <2.3
     , base        >=4.16.0 && <4.19
     , bytestring  >=0.11.4 && <0.12
     , req         >=3.13.1 && <3.14
-    , scientific  >=0.3.7  && <0.4
     , text        >=2.0.2  && <2.1
     , vector      >=0.13.0 && <0.14
 
