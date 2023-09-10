@@ -22,9 +22,9 @@ import Web.Google.Sheets.Spreadsheets.Values
   , ValueInputOption (..)
   , WriteSheetValue (..)
   , appendValues
+  , clearValues
   , defaultGetValueParams
   , getValueRange
   , getValues
   , updateValues
-  , clearValues
   )

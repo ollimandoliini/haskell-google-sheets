@@ -4,12 +4,10 @@ module Main (main) where
 
 import Data.Text (pack)
 import Data.Text.Encoding (encodeUtf8)
-import Data.Vector (singleton, empty)
+import Data.Vector (empty, singleton)
 import System.Environment
 import Test.Hspec
 import Web.Google.Sheets
-
-
 
 main :: IO ()
 main = do
@@ -24,17 +22,3 @@ main = do
           updateValues token Nothing spreadSheetId range UserEntered [[SheetDouble 10, SheetBool True, SheetString "Moro"]]
           clearValues token Nothing spreadSheetId range
           getValueRange token Nothing spreadSheetId range defaultGetValueParams
-        
-
-    -- describe "appendValues" $ do
-    --   it "appends a value to the sheet" $ do
-    --     let range = RangeWithSheetName (Just (FullRange 0 0 2 0)) sheetName
-    --         request =
-    --           appendValues
-    --             token
-    --             Nothing
-    --             spreadSheetId
-    --             range
-    --             UserEntered
-    --             [[SheetDouble 10, SheetBool True, SheetString "Moro"]]
-    --     runReq defaultHttpConfig request `shouldReturn` ()

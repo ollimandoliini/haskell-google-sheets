@@ -43,13 +43,13 @@ import Web.Google.Sheets.Spreadsheets.Values.Types
   , Dimension (..)
   , GetValueParams (..)
   , Range (..)
+  , ReadSheetValue (ReadSheetValue)
   , ReadValueRange (..)
   , SheetRange (..)
   , ValueInputOption (..)
   , ValueRenderOption (..)
-  , defaultGetValueParams
   , WriteSheetValue (..)
-  , ReadSheetValue (ReadSheetValue)
+  , defaultGetValueParams
   )
 
 -- | Update values on a range.
