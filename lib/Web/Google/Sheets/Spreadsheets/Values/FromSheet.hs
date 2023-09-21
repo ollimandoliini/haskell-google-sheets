@@ -3,11 +3,11 @@
 -- | This module introduces a hierachy of type classes for converting sheet values into Haskell values.
 module Web.Google.Sheets.Spreadsheets.Values.FromSheet where
 
-import Data.Text (Text, unpack, pack)
+import Data.Text (Text, pack, unpack)
+import Data.Text.Read (decimal)
 import Data.Vector (Vector, toList)
 import Text.Read (readEither)
 import Web.Google.Sheets.Spreadsheets.Values.Types (SheetValue (..))
-import Data.Text.Read (decimal)
 
 -- | `FromSheet` is the highest level of the decoding type class hiearchy. It is used to convert a two-dimensional
 -- (a vector of vectors) value into some value `a`.
@@ -50,7 +50,6 @@ instance FromSheetValue Text where
   fromSheetValue (SheetString s) = Right s
   fromSheetValue val = Right . pack . show $ val
 
-
 instance FromSheetValue String where
   fromSheetValue (SheetString s) = Right . unpack $ s
   fromSheetValue val = Right . show $ val
@@ -65,9 +64,7 @@ instance FromSheetValue Int where
   fromSheetValue (SheetString s) = fst <$> decimal s
   fromSheetValue val = Left $ "Could not parse: '" <> show val <> "' to Int."
 
-
 instance FromSheetValue Integer where
   fromSheetValue (SheetDouble d) = pure $ floor d
   fromSheetValue (SheetString s) = fst <$> decimal s
   fromSheetValue val = Left $ "Could not parse: '" <> show val <> "' to Integer."
-

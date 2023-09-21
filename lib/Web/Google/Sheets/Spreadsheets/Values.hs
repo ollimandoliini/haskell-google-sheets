@@ -197,7 +197,7 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-            <> ":append"
+              <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams
@@ -242,7 +242,7 @@ clearValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-            <> ":clear"
+              <> ":clear"
         options =
           oAuth2Bearer accessToken
             <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject
