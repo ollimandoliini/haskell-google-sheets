@@ -3,12 +3,12 @@ module Web.Google.Sheets.Spreadsheets.Values.ToSheet where
 
 import Data.Text (Text, pack)
 import Data.Vector (Vector, fromList)
-import Web.Google.Sheets.Spreadsheets.Values.Types (WriteSheetValue (..))
+import Web.Google.Sheets.Spreadsheets.Values.Types (SheetValue (..))
 
 -- | `ToSheet` is the highest level of the encoding type class hiearchy. It is used to convert a value of type
 -- `a` to a two-dimensional (a vector of vectors) value which can then be written to a sheet.
 class ToSheet a where
-  toSheet :: a -> Vector (Vector WriteSheetValue)
+  toSheet :: a -> Vector (Vector SheetValue)
 
 instance (ToSheetDimension a) => ToSheet (Vector a) where
   toSheet = fmap toSheetDimension
@@ -20,7 +20,7 @@ instance (ToSheetDimension a) => ToSheet [a] where
 -- `a` to a one-dimensional (a vector of vectors) value which can then be written to a sheet.
 -- It is commonly used when writing rows or columns of some user-defined type to a sheet.
 class ToSheetDimension a where
-  toSheetDimension :: a -> Vector WriteSheetValue
+  toSheetDimension :: a -> Vector SheetValue
 
 instance (ToSheetValue a) => ToSheetDimension (Vector a) where
   toSheetDimension = fmap toSheetValue
@@ -31,7 +31,7 @@ instance (ToSheetValue a) => ToSheetDimension [a] where
 -- | `ToSheetValue` is the third and the lowest level of the encoding type class hiearchy. It is used to convert a value of type @\a@.
 -- into a `WriteSheetValue`.
 class ToSheetValue a where
-  toSheetValue :: a -> WriteSheetValue
+  toSheetValue :: a -> SheetValue
 
 instance ToSheetValue Double where
   toSheetValue = SheetDouble
@@ -54,5 +54,5 @@ instance ToSheetValue String where
 instance ToSheetValue Bool where
   toSheetValue = SheetBool
 
-instance ToSheetValue WriteSheetValue where
+instance ToSheetValue SheetValue where
   toSheetValue = id

@@ -10,13 +10,14 @@ module Web.Google.Sheets.Spreadsheets.Values.Types
   , SheetRange (..)
   , DatetimeRenderOption (..)
   , ReadValueRange (..)
-  , WriteSheetValue (..)
-  , ReadSheetValue (..)
+  , SheetValue (..)
+  , InsertDataOption (..)
   )
 where
 
-import Data.Aeson (FromJSON, ToJSON, parseJSON, withObject, (.!=), (.:?))
-import Data.Aeson.Types (ToJSON (toJSON), Value (String))
+import Data.Aeson (FromJSON, ToJSON, Value (..), parseJSON, withObject, (.!=), (.:?))
+import Data.Aeson.Types (ToJSON (toJSON))
+import Data.Scientific (toRealFloat)
 import Data.Text (Text)
 import Data.Vector (Vector, empty, singleton)
 import Numeric.Natural (Natural)
@@ -76,18 +77,15 @@ data SheetRange
       -- ^ End row
   deriving (Show)
 
--- | A value that's read from a sheet. The Sheets API always returns a string.
-newtype ReadSheetValue
-  = ReadSheetValue Text
-  deriving (Show, Eq)
-
-instance FromJSON ReadSheetValue where
-  parseJSON (String s) = pure $ ReadSheetValue s
-  parseJSON val = fail $ "Could not parse ReadSheetValue from: " <> show val
+instance FromJSON SheetValue where
+  parseJSON (String s) = pure $ SheetString s
+  parseJSON (Number n) = pure $ SheetDouble $ toRealFloat n
+  parseJSON (Bool b) = pure $ SheetBool b
+  parseJSON val = fail $ "Could not parse SheetValue from: " <> show val
 
 -- | Raw values returned by the Sheets API.
 newtype ReadValueRange = ReadValueRange
-  { values :: Vector (Vector ReadSheetValue)
+  { values :: Vector (Vector SheetValue)
   }
   deriving (Show, Eq)
 
@@ -97,13 +95,13 @@ instance FromJSON ReadValueRange where
       \o -> ReadValueRange <$> o .:? "values" .!= singleton empty
 
 -- | A value that's written to a sheet.
-data WriteSheetValue
+data SheetValue
   = SheetDouble Double
   | SheetString Text
   | SheetBool Bool
-  deriving (Show)
+  deriving (Show, Eq)
 
-instance ToJSON WriteSheetValue where
+instance ToJSON SheetValue where
   toJSON (SheetDouble d) = toJSON d
   toJSON (SheetString s) = toJSON s
   toJSON (SheetBool b) = toJSON b
@@ -127,8 +125,10 @@ data Dimension
 
 -- | https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
 data ValueRenderOption
-  = FormattedValue
-  | UnformattedValue
+  = -- | With this option `SheetString` will always be returned
+    FormattedValue
+  | -- | With this option option either `SheetString`, `SheetDouble` or `SheetBool` will be returned
+    UnformattedValue
   | Formula
 
 -- | https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
@@ -140,3 +140,8 @@ data DatetimeRenderOption
 data ValueInputOption
   = Raw
   | UserEntered
+
+-- | https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#insertdataoption
+data InsertDataOption
+  = Overwrite
+  | InsertRows

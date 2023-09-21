@@ -30,3 +30,4 @@ main = do
 - [x] Consider location of `Types` module
 - [x] Check contents of `Types` module
 - [ ] Write tests for `FromSheet` instances
+- [ ] Consider adding pre-commit

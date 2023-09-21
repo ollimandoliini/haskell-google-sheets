@@ -42,13 +42,13 @@ import Web.Google.Sheets.Spreadsheets.Values.Types
   ( DatetimeRenderOption (..)
   , Dimension (..)
   , GetValueParams (..)
+  , InsertDataOption (..)
   , Range (..)
-  , ReadSheetValue (ReadSheetValue)
   , ReadValueRange (..)
   , SheetRange (..)
+  , SheetValue (..)
   , ValueInputOption (..)
   , ValueRenderOption (..)
-  , WriteSheetValue (..)
   , defaultGetValueParams
   )
 
@@ -179,7 +179,7 @@ appendValues
   -> Range
   -- ^ Range
   -> ValueInputOption
-  -- TODO: InsertDataOption
+  -> InsertDataOption
   -> a
   -> m ()
 appendValues
@@ -188,6 +188,7 @@ appendValues
   spreadsheetId
   range
   valueInputOption
+  insertDataOption
   values =
     let apiUrl =
           https "sheets.googleapis.com"
@@ -196,7 +197,7 @@ appendValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-              <> ":append"
+            <> ":append"
         options =
           oAuth2Bearer accessToken
             <> queryParams
@@ -205,11 +206,17 @@ appendValues
      in void $ req POST apiUrl reqBody ignoreResponse options
     where
       queryParams :: Option 'Https
-      queryParams = queryParam "valueInputOption" (Just (encodeValueInputOption valueInputOption))
+      queryParams =
+        queryParam "valueInputOption" (Just (encodeValueInputOption valueInputOption))
+          <> queryParam "insertDataOption" (Just (encodeInsertDataOption insertDataOption))
 
       encodeValueInputOption :: ValueInputOption -> Text
       encodeValueInputOption Raw = "RAW"
       encodeValueInputOption UserEntered = "USER_ENTERED"
+
+      encodeInsertDataOption :: InsertDataOption -> Text
+      encodeInsertDataOption Overwrite = "OVERWRITE"
+      encodeInsertDataOption InsertRows = "INSERT_ROWS"
 
 -- | Clear values from a range.
 clearValues
@@ -235,7 +242,7 @@ clearValues
             /: spreadsheetId
             /: "values"
             /: rangeToText range
-              <> ":clear"
+            <> ":clear"
         options =
           oAuth2Bearer accessToken
             <> maybe mempty (header "x-goog-user-project" . encodeUtf8) quotaProject

@@ -16,11 +16,10 @@ import Web.Google.Sheets.Spreadsheets.Values
   , Dimension
   , GetValueParams (..)
   , Range (..)
-  , ReadSheetValue (ReadSheetValue)
   , ReadValueRange (..)
   , SheetRange (..)
+  , SheetValue (..)
   , ValueInputOption (..)
-  , WriteSheetValue (..)
   , appendValues
   , clearValues
   , defaultGetValueParams
